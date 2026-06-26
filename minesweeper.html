@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지뢰찾기</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #eee;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+    color: #e94560;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .controls button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    background: #16213e;
+    color: #eee;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border: 1px solid #0f3460;
+    transition: background 0.2s;
+  }
+  .controls button:hover, .controls button.active {
+    background: #e94560;
+    border-color: #e94560;
+  }
+  .info-bar {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 1.1rem;
+    background: #16213e;
+    padding: 10px 28px;
+    border-radius: 10px;
+    border: 1px solid #0f3460;
+  }
+  .info-bar .label { color: #aaa; font-size: 0.9rem; text-align: center; }
+  .info-bar .value { font-weight: bold; color: #e94560; font-size: 1.2rem; text-align: center; }
+  #reset-btn {
+    font-size: 1.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s;
+    line-height: 1;
+  }
+  #reset-btn:hover { transform: scale(1.2); }
+  #board {
+    display: grid;
+    gap: 2px;
+    background: #0f3460;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid #e94560;
+    box-shadow: 0 0 30px rgba(233,69,96,0.3);
+    overflow: auto;
+    max-width: 100%;
+  }
+  .cell {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s, transform 0.05s;
+  }
+  .cell.hidden {
+    background: #1e3a5f;
+    border: 1px solid #2a5080;
+  }
+  .cell.hidden:hover {
+    background: #2a4f7a;
+    transform: scale(1.08);
+  }
+  .cell.revealed {
+    background: #0d1b2a;
+    border: 1px solid #0a1520;
+    cursor: default;
+  }
+  .cell.flagged {
+    background: #1e3a5f;
+    border: 1px solid #e94560;
+  }
+  .cell.mine-exploded {
+    background: #e94560;
+    border: 1px solid #ff6b6b;
+  }
+  .cell.mine-revealed {
+    background: #0d1b2a;
+    border: 1px solid #333;
+  }
+  .n1 { color: #4fc3f7; }
+  .n2 { color: #81c784; }
+  .n3 { color: #e57373; }
+  .n4 { color: #9575cd; }
+  .n5 { color: #ff8a65; }
+  .n6 { color: #4dd0e1; }
+  .n7 { color: #f06292; }
+  .n8 { color: #aaa; }
+  #message {
+    margin-top: 16px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    min-height: 2rem;
+    color: #e94560;
+    letter-spacing: 1px;
+  }
+  .hint {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+<h1>💣 지뢰찾기</h1>
+<div class="controls">
+  <button onclick="setDifficulty(9,9,10)" id="btn-easy">쉬움 (9×9, 10개)</button>
+  <button onclick="setDifficulty(16,16,40)" id="btn-medium" class="active">보통 (16×16, 40개)</button>
+  <button onclick="setDifficulty(16,30,99)" id="btn-hard">어려움 (16×30, 99개)</button>
+</div>
+<div class="info-bar">
+  <div>
+    <div class="label">💣 지뢰</div>
+    <div class="value" id="mine-count">40</div>
+  </div>
+  <button id="reset-btn" onclick="initGame()" title="새 게임">🙂</button>
+  <div>
+    <div class="label">⏱ 시간</div>
+    <div class="value"><span id="timer">0</span>s</div>
+  </div>
+</div>
+<div id="board"></div>
+<div id="message"></div>
+<div class="hint">좌클릭: 열기 &nbsp;|&nbsp; 우클릭: 깃발 꽂기</div>
+
+<script>
+let ROWS = 16, COLS = 16, MINES = 40;
+let board = [], revealed = [], flagged = [];
+let gameOver = false, gameWon = false, firstClick = true;
+let timerInterval = null, seconds = 0;
+
+function setDifficulty(r, c, m) {
+  ROWS = r; COLS = c; MINES = m;
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  if (r === 9) document.getElementById('btn-easy').classList.add('active');
+  else if (c === 16) document.getElementById('btn-medium').classList.add('active');
+  else document.getElementById('btn-hard').classList.add('active');
+  initGame();
+}
+
+function initGame() {
+  clearInterval(timerInterval);
+  seconds = 0;
+  document.getElementById('timer').textContent = '0';
+  document.getElementById('message').textContent = '';
+  document.getElementById('reset-btn').textContent = '🙂';
+  document.getElementById('mine-count').textContent = MINES;
+  gameOver = false; gameWon = false; firstClick = true;
+  board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+  revealed = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+  flagged = Array.from({length: ROWS}, () => Array(COLS).fill(false));
+  renderBoard();
+}
+
+function placeMines(skipR, skipC) {
+  let placed = 0;
+  while (placed < MINES) {
+    const r = Math.floor(Math.random() * ROWS);
+    const c = Math.floor(Math.random() * COLS);
+    if (board[r][c] === -1) continue;
+    if (Math.abs(r - skipR) <= 1 && Math.abs(c - skipC) <= 1) continue;
+    board[r][c] = -1;
+    placed++;
+  }
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (board[r][c] !== -1)
+        board[r][c] = countAdj(r, c);
+}
+
+function countAdj(r, c) {
+  let count = 0;
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === -1) count++;
+    }
+  return count;
+}
+
+function renderBoard() {
+  const el = document.getElementById('board');
+  el.style.gridTemplateColumns = `repeat(${COLS}, 34px)`;
+  el.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell hidden';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      cell.addEventListener('click', onLeftClick);
+      cell.addEventListener('contextmenu', onRightClick);
+      el.appendChild(cell);
+    }
+  }
+}
+
+function onLeftClick() {
+  const r = +this.dataset.r, c = +this.dataset.c;
+  if (gameOver || gameWon || flagged[r][c] || revealed[r][c]) return;
+  if (firstClick) {
+    firstClick = false;
+    placeMines(r, c);
+    startTimer();
+  }
+  reveal(r, c);
+  checkWin();
+  refreshBoard();
+}
+
+function onRightClick(e) {
+  e.preventDefault();
+  const r = +this.dataset.r, c = +this.dataset.c;
+  if (gameOver || gameWon || revealed[r][c]) return;
+  flagged[r][c] = !flagged[r][c];
+  const remaining = MINES - flagged.flat().filter(Boolean).length;
+  document.getElementById('mine-count').textContent = remaining;
+  refreshBoard();
+}
+
+function reveal(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS || revealed[r][c] || flagged[r][c]) return;
+  revealed[r][c] = true;
+  if (board[r][c] === -1) {
+    gameOver = true;
+    document.getElementById('reset-btn').textContent = '😵';
+    clearInterval(timerInterval);
+    document.getElementById('message').textContent = '💥 게임 오버!';
+    return;
+  }
+  if (board[r][c] === 0) {
+    for (let dr = -1; dr <= 1; dr++)
+      for (let dc = -1; dc <= 1; dc++)
+        reveal(r + dr, c + dc);
+  }
+}
+
+function checkWin() {
+  let unrevealed = 0;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (!revealed[r][c]) unrevealed++;
+  if (unrevealed === MINES) {
+    gameWon = true;
+    clearInterval(timerInterval);
+    document.getElementById('reset-btn').textContent = '😎';
+    document.getElementById('message').textContent = '🎉 클리어!';
+  }
+}
+
+function refreshBoard() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+      el.className = 'cell';
+      el.textContent = '';
+      if (revealed[r][c]) {
+        if (board[r][c] === -1) {
+          el.classList.add('mine-exploded');
+          el.textContent = '💣';
+        } else {
+          el.classList.add('revealed');
+          if (board[r][c] > 0) {
+            el.textContent = board[r][c];
+            el.classList.add('n' + board[r][c]);
+          }
+        }
+      } else if (flagged[r][c]) {
+        el.classList.add('flagged');
+        el.textContent = '🚩';
+      } else {
+        el.classList.add('hidden');
+        if ((gameOver || gameWon) && board[r][c] === -1) {
+          el.classList.remove('hidden');
+          el.classList.add('mine-revealed');
+          el.textContent = '💣';
+        }
+      }
+    }
+  }
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    seconds++;
+    document.getElementById('timer').textContent = seconds;
+  }, 1000);
+}
+
+initGame();
+</script>
+</body>
+</html>

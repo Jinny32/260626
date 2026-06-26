@@ -1,0 +1,137 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1a1a2e;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  color: #eee;
+}
+
+/* ===== 공통 ===== */
+.screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+.screen.active { display: flex; }
+.back-btn {
+  position: fixed; top: 16px; left: 16px;
+  background: #16213e; border: 1px solid #0f3460;
+  color: #eee; padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; font-size: 0.9rem; z-index: 100;
+  transition: background 0.2s;
+}
+.back-btn:hover { background: #e94560; border-color: #e94560; }
+
+/* ===== 허브 ===== */
+#hub h1 { font-size: 2.4rem; color: #e94560; letter-spacing: 3px; margin-bottom: 8px; }
+#hub p { color: #666; margin-bottom: 40px; font-size: 1rem; }
+.card-grid { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+.card {
+  background: #16213e; border: 1px solid #0f3460;
+  border-radius: 16px; padding: 32px 28px; width: 220px;
+  text-align: center; cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { transform: translateY(-6px); border-color: #e94560; box-shadow: 0 8px 30px rgba(233,69,96,0.25); }
+.card .icon { font-size: 3rem; margin-bottom: 14px; }
+.card h2 { font-size: 1.2rem; margin-bottom: 8px; color: #fff; }
+.card p { font-size: 0.82rem; color: #777; margin-bottom: 20px; line-height: 1.5; }
+.card button {
+  background: #e94560; border: none; color: #fff;
+  padding: 9px 24px; border-radius: 8px; cursor: pointer;
+  font-size: 0.9rem; font-weight: bold; transition: background 0.2s;
+}
+.card button:hover { background: #c73652; }
+
+/* ===== 지뢰찾기 ===== */
+#mine-screen h1 { font-size: 1.8rem; color: #e94560; margin-bottom: 14px; letter-spacing: 2px; }
+.controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+.controls button {
+  padding: 7px 16px; border: 1px solid #0f3460; border-radius: 6px;
+  background: #16213e; color: #eee; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+}
+.controls button:hover, .controls button.active { background: #e94560; border-color: #e94560; }
+.info-bar {
+  display: flex; gap: 28px; align-items: center; margin-bottom: 12px;
+  background: #16213e; padding: 9px 24px; border-radius: 10px; border: 1px solid #0f3460;
+}
+.info-bar .lbl { color: #aaa; font-size: 0.8rem; text-align: center; }
+.info-bar .val { font-weight: bold; color: #e94560; font-size: 1.1rem; text-align: center; }
+#reset-btn { font-size: 1.5rem; background: none; border: none; cursor: pointer; }
+#reset-btn:hover { transform: scale(1.2); }
+#board {
+  display: grid; gap: 2px; background: #0f3460;
+  padding: 10px; border-radius: 10px;
+  border: 2px solid #e94560; box-shadow: 0 0 28px rgba(233,69,96,0.3);
+  overflow: auto; max-width: 100%;
+}
+.cell {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  font-size: 0.88rem; font-weight: bold; border-radius: 4px;
+  cursor: pointer; user-select: none; transition: background 0.1s, transform 0.05s;
+}
+.cell.hidden { background: #1e3a5f; border: 1px solid #2a5080; }
+.cell.hidden:hover { background: #2a4f7a; transform: scale(1.08); }
+.cell.revealed { background: #0d1b2a; border: 1px solid #0a1520; cursor: default; }
+.cell.flagged { background: #1e3a5f; border: 1px solid #e94560; }
+.cell.mine-exploded { background: #e94560; border: 1px solid #ff6b6b; }
+.cell.mine-revealed { background: #0d1b2a; border: 1px solid #333; }
+.n1 { color: #4fc3f7; }
+.n2 { color: #81c784; }
+.n3 { color: #e57373; }
+.n4 { color: #9575cd; }
+.n5 { color: #ff8a65; }
+.n6 { color: #4dd0e1; }
+.n7 { color: #f06292; }
+.n8 { color: #aaa; }
+#mine-msg { margin-top: 14px; font-size: 1.2rem; font-weight: bold; min-height: 1.8rem; color: #e94560; }
+.hint { margin-top: 8px; font-size: 0.78rem; color: #555; }
+
+/* ===== 2048 ===== */
+#g2048-screen h1 { font-size: 1.8rem; color: #e94560; letter-spacing: 2px; margin-bottom: 14px; }
+.g2048-header { display: flex; gap: 18px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+.score-box {
+  background: #16213e; border: 1px solid #0f3460; border-radius: 8px;
+  padding: 8px 20px; text-align: center;
+}
+.score-box .lbl { font-size: 0.75rem; color: #888; }
+.score-box .val { font-size: 1.3rem; font-weight: bold; color: #e94560; }
+#new-game-btn {
+  background: #e94560; border: none; color: #fff; padding: 10px 20px;
+  border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold;
+}
+#new-game-btn:hover { background: #c73652; }
+#grid-2048 {
+  display: grid; grid-template-columns: repeat(4, 90px); grid-template-rows: repeat(4, 90px);
+  gap: 10px; background: #0f3460; padding: 12px; border-radius: 12px;
+  border: 2px solid #e94560; box-shadow: 0 0 28px rgba(233,69,96,0.3);
+  position: relative;
+}
+.tile-bg { width: 90px; height: 90px; background: #16213e; border-radius: 8px; }
+.tile {
+  position: absolute; width: 90px; height: 90px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 1.6rem; transition: top 0.12s, left 0.12s;
+  user-select: none;
+}
+.t2    { background: #1e3a5f; color: #eee; }
+.t4    { background: #1a4a72; color: #eee; }
+.t8    { background: #e94560; color: #fff; font-size: 1.5rem; }
+.t16   { background: #d4354f; color: #fff; font-size: 1.4rem; }
+.t32   { background: #bf2a3e; color: #fff; font-size: 1.3rem; }
+.t64   { background: #a9202e; color: #fff; font-size: 1.2rem; }
+.t128  { background: #f5a623; color: #fff; font-size: 1.1rem; }
+.t256  { background: #e89b20; color: #fff; font-size: 1rem; }
+.t512  { background: #d9901c; color: #fff; font-size: 1rem; }
+.t1024 { background: #c98419; color: #fff; font-size: 0.9rem; }
+.t2048 { background: #b87816; color: #fff; font-size: 0.9rem; box-shadow: 0 0 20px gold; }
+.t-hi  { background: #8b5e11; color: #fff; font-size: 0.85rem; }
+#msg-2048 { margin-top: 14px; font-size: 1.2rem; font-weight: bold; min-height: 1.8rem; color: #e94560; }
+.hint2 { margin-top: 8px; font-size: 0.78rem; color: #555; }
+.overlay-2048 {
+  display: none; position: absolute; inset: 0;
+  background: rgba(26,26,46,0.88); border-radius: 10px;
+  flex-direction: column; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: bold; color: #e94560; gap: 14px; z-index: 10;
+}
+.overlay-2048.show { display: flex; }
+.overlay-2048 button {
+  background: #e94560; border: none; color: #fff;
+  padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+}

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미니 게임 허브</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: #eee;
+  }
+
+  /* ===== 공통 ===== */
+  .screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  .screen.active { display: flex; }
+  .back-btn {
+    position: fixed; top: 16px; left: 16px;
+    background: #16213e; border: 1px solid #0f3460;
+    color: #eee; padding: 8px 14px; border-radius: 8px;
+    cursor: pointer; font-size: 0.9rem; z-index: 100;
+    transition: background 0.2s;
+  }
+  .back-btn:hover { background: #e94560; border-color: #e94560; }
+
+  /* ===== 허브 ===== */
+  #hub h1 { font-size: 2.4rem; color: #e94560; letter-spacing: 3px; margin-bottom: 8px; }
+  #hub p { color: #666; margin-bottom: 40px; font-size: 1rem; }
+  .card-grid { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+  .card {
+    background: #16213e; border: 1px solid #0f3460;
+    border-radius: 16px; padding: 32px 28px; width: 220px;
+    text-align: center; cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { transform: translateY(-6px); border-color: #e94560; box-shadow: 0 8px 30px rgba(233,69,96,0.25); }
+  .card .icon { font-size: 3rem; margin-bottom: 14px; }
+  .card h2 { font-size: 1.2rem; margin-bottom: 8px; color: #fff; }
+  .card p { font-size: 0.82rem; color: #777; margin-bottom: 20px; line-height: 1.5; }
+  .card button {
+    background: #e94560; border: none; color: #fff;
+    padding: 9px 24px; border-radius: 8px; cursor: pointer;
+    font-size: 0.9rem; font-weight: bold; transition: background 0.2s;
+  }
+  .card button:hover { background: #c73652; }
+
+  /* ===== 지뢰찾기 ===== */
+  #mine-screen h1 { font-size: 1.8rem; color: #e94560; margin-bottom: 14px; letter-spacing: 2px; }
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+  .controls button {
+    padding: 7px 16px; border: 1px solid #0f3460; border-radius: 6px;
+    background: #16213e; color: #eee; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+  }
+  .controls button:hover, .controls button.active { background: #e94560; border-color: #e94560; }
+  .info-bar {
+    display: flex; gap: 28px; align-items: center; margin-bottom: 12px;
+    background: #16213e; padding: 9px 24px; border-radius: 10px; border: 1px solid #0f3460;
+  }
+  .info-bar .lbl { color: #aaa; font-size: 0.8rem; text-align: center; }
+  .info-bar .val { font-weight: bold; color: #e94560; font-size: 1.1rem; text-align: center; }
+  #reset-btn { font-size: 1.5rem; background: none; border: none; cursor: pointer; }
+  #reset-btn:hover { transform: scale(1.2); }
+  #board {
+    display: grid; gap: 2px; background: #0f3460;
+    padding: 10px; border-radius: 10px;
+    border: 2px solid #e94560; box-shadow: 0 0 28px rgba(233,69,96,0.3);
+    overflow: auto; max-width: 100%;
+  }
+  .cell {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.88rem; font-weight: bold; border-radius: 4px;
+    cursor: pointer; user-select: none; transition: background 0.1s, transform 0.05s;
+  }
+  .cell.hidden { background: #1e3a5f; border: 1px solid #2a5080; }
+  .cell.hidden:hover { background: #2a4f7a; transform: scale(1.08); }
+  .cell.revealed { background: #0d1b2a; border: 1px solid #0a1520; cursor: default; }
+  .cell.flagged { background: #1e3a5f; border: 1px solid #e94560; }
+  .cell.mine-exploded { background: #e94560; border: 1px solid #ff6b6b; }
+  .cell.mine-revealed { background: #0d1b2a; border: 1px solid #333; }
+  .n1{color:#4fc3f7}.n2{color:#81c784}.n3{color:#e57373}.n4{color:#9575cd}
+  .n5{color:#ff8a65}.n6{color:#4dd0e1}.n7{color:#f06292}.n8{color:#aaa}
+  #mine-msg { margin-top: 14px; font-size: 1.2rem; font-weight: bold; min-height: 1.8rem; color: #e94560; }
+  .hint { margin-top: 8px; font-size: 0.78rem; color: #555; }
+
+  /* ===== 2048 ===== */
+  #g2048-screen h1 { font-size: 1.8rem; color: #e94560; letter-spacing: 2px; margin-bottom: 14px; }
+  .g2048-header { display: flex; gap: 18px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+  .score-box {
+    background: #16213e; border: 1px solid #0f3460; border-radius: 8px;
+    padding: 8px 20px; text-align: center;
+  }
+  .score-box .lbl { font-size: 0.75rem; color: #888; }
+  .score-box .val { font-size: 1.3rem; font-weight: bold; color: #e94560; }
+  #new-game-btn {
+    background: #e94560; border: none; color: #fff; padding: 10px 20px;
+    border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold;
+  }
+  #new-game-btn:hover { background: #c73652; }
+  #grid-2048 {
+    display: grid; grid-template-columns: repeat(4, 90px); grid-template-rows: repeat(4, 90px);
+    gap: 10px; background: #0f3460; padding: 12px; border-radius: 12px;
+    border: 2px solid #e94560; box-shadow: 0 0 28px rgba(233,69,96,0.3);
+    position: relative;
+  }
+  .tile-bg {
+    width: 90px; height: 90px; background: #16213e; border-radius: 8px;
+  }
+  .tile {
+    position: absolute; width: 90px; height: 90px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 1.6rem; transition: top 0.12s, left 0.12s;
+    user-select: none;
+  }
+  .t2   { background:#1e3a5f; color:#eee; }
+  .t4   { background:#1a4a72; color:#eee; }
+  .t8   { background:#e94560; color:#fff; font-size:1.5rem; }
+  .t16  { background:#d4354f; color:#fff; font-size:1.4rem; }
+  .t32  { background:#bf2a3e; color:#fff; font-size:1.3rem; }
+  .t64  { background:#a9202e; color:#fff; font-size:1.2rem; }
+  .t128 { background:#f5a623; color:#fff; font-size:1.1rem; }
+  .t256 { background:#e89b20; color:#fff; font-size:1rem; }
+  .t512 { background:#d9901c; color:#fff; font-size:1rem; }
+  .t1024{ background:#c98419; color:#fff; font-size:0.9rem; }
+  .t2048{ background:#b87816; color:#fff; font-size:0.9rem; box-shadow:0 0 20px gold; }
+  .t-hi { background:#8b5e11; color:#fff; font-size:0.85rem; }
+  #msg-2048 { margin-top: 14px; font-size: 1.2rem; font-weight: bold; min-height: 1.8rem; color: #e94560; }
+  .hint2 { margin-top: 8px; font-size: 0.78rem; color: #555; }
+  .overlay-2048 {
+    display: none; position: absolute; inset: 0;
+    background: rgba(26,26,46,0.88); border-radius: 10px;
+    flex-direction: column; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: bold; color: #e94560; gap: 14px; z-index: 10;
+  }
+  .overlay-2048.show { display: flex; }
+  .overlay-2048 button {
+    background: #e94560; border: none; color: #fff;
+    padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 허브 ===== -->
+<div id="hub" class="screen active">
+  <h1>🎮 게임 허브</h1>
+  <p>즐기고 싶은 게임을 선택하세요</p>
+  <div class="card-grid">
+    <div class="card" onclick="showScreen('mine-screen')">
+      <div class="icon">💣</div>
+      <h2>지뢰찾기</h2>
+      <p>숨겨진 지뢰를 피해<br>모든 칸을 열어보세요</p>
+      <button>플레이</button>
+    </div>
+    <div class="card" onclick="showScreen('g2048-screen'); init2048()">
+      <div class="icon">🔢</div>
+      <h2>2048</h2>
+      <p>타일을 합쳐 2048을<br>만들어보세요</p>
+      <button>플레이</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 지뢰찾기 ===== -->
+<div id="mine-screen" class="screen">
+  <button class="back-btn" onclick="showScreen('hub')">← 허브</button>
+  <h1>💣 지뢰찾기</h1>
+  <div class="controls">
+    <button onclick="mineSetDiff(9,9,10)" id="mine-easy">쉬움 (9×9)</button>
+    <button onclick="mineSetDiff(16,16,40)" id="mine-med" class="active">보통 (16×16)</button>
+    <button onclick="mineSetDiff(16,30,99)" id="mine-hard">어려움 (16×30)</button>
+  </div>
+  <div class="info-bar">
+    <div><div class="lbl">💣 지뢰</div><div class="val" id="mine-count">40</div></div>
+    <button id="reset-btn" onclick="mineInit()" title="새 게임">🙂</button>
+    <div><div class="lbl">⏱ 시간</div><div class="val"><span id="mine-timer">0</span>s</div></div>
+  </div>
+  <div id="board"></div>
+  <div id="mine-msg"></div>
+  <div class="hint">좌클릭: 열기 &nbsp;|&nbsp; 우클릭: 깃발</div>
+</div>
+
+<!-- ===== 2048 ===== -->
+<div id="g2048-screen" class="screen">
+  <button class="back-btn" onclick="showScreen('hub')">← 허브</button>
+  <h1>🔢 2048</h1>
+  <div class="g2048-header">
+    <div class="score-box"><div class="lbl">점수</div><div class="val" id="score">0</div></div>
+    <div class="score-box"><div class="lbl">최고</div><div class="val" id="best">0</div></div>
+    <button id="new-game-btn" onclick="init2048()">새 게임</button>
+  </div>
+  <div id="grid-2048">
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="overlay-2048" id="overlay-2048">
+      <div id="overlay-msg"></div>
+      <button onclick="init2048()">다시 하기</button>
+    </div>
+  </div>
+  <div id="msg-2048"></div>
+  <div class="hint2">방향키 / WASD / 스와이프</div>
+</div>
+
+<script>
+/* ========== 화면 전환 ========== */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ========== 지뢰찾기 ========== */
+let mR=16, mC=16, mM=40;
+let mBoard=[], mRev=[], mFlag=[];
+let mOver=false, mWon=false, mFirst=true;
+let mTimer=null, mSec=0;
+
+function mineSetDiff(r,c,m){
+  mR=r; mC=c; mM=m;
+  document.querySelectorAll('#mine-screen .controls button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(r===9?'mine-easy':c===16?'mine-med':'mine-hard').classList.add('active');
+  mineInit();
+}
+
+function mineInit(){
+  clearInterval(mTimer); mSec=0;
+  document.getElementById('mine-timer').textContent='0';
+  document.getElementById('mine-msg').textContent='';
+  document.getElementById('reset-btn').textContent='🙂';
+  document.getElementById('mine-count').textContent=mM;
+  mOver=false; mWon=false; mFirst=true;
+  mBoard=Array.from({length:mR},()=>Array(mC).fill(0));
+  mRev=Array.from({length:mR},()=>Array(mC).fill(false));
+  mFlag=Array.from({length:mR},()=>Array(mC).fill(false));
+  mRender();
+}
+
+function mPlaceMines(sr,sc){
+  let p=0;
+  while(p<mM){
+    const r=Math.floor(Math.random()*mR), c=Math.floor(Math.random()*mC);
+    if(mBoard[r][c]===-1) continue;
+    if(Math.abs(r-sr)<=1&&Math.abs(c-sc)<=1) continue;
+    mBoard[r][c]=-1; p++;
+  }
+  for(let r=0;r<mR;r++) for(let c=0;c<mC;c++) if(mBoard[r][c]!==-1) mBoard[r][c]=mAdj(r,c);
+}
+
+function mAdj(r,c){
+  let n=0;
+  for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+    const nr=r+dr,nc=c+dc;
+    if(nr>=0&&nr<mR&&nc>=0&&nc<mC&&mBoard[nr][nc]===-1) n++;
+  }
+  return n;
+}
+
+function mRender(){
+  const el=document.getElementById('board');
+  el.style.gridTemplateColumns=`repeat(${mC},32px)`;
+  el.innerHTML='';
+  for(let r=0;r<mR;r++) for(let c=0;c<mC;c++){
+    const cell=document.createElement('div');
+    cell.className='cell hidden'; cell.dataset.r=r; cell.dataset.c=c;
+    cell.addEventListener('click',mClick);
+    cell.addEventListener('contextmenu',mFlag2);
+    el.appendChild(cell);
+  }
+}
+
+function mClick(){
+  const r=+this.dataset.r, c=+this.dataset.c;
+  if(mOver||mWon||mFlag[r][c]||mRev[r][c]) return;
+  if(mFirst){ mFirst=false; mPlaceMines(r,c); clearInterval(mTimer); mTimer=setInterval(()=>{ mSec++; document.getElementById('mine-timer').textContent=mSec; },1000); }
+  mReveal(r,c); mCheckWin(); mRefresh();
+}
+
+function mFlag2(e){
+  e.preventDefault();
+  const r=+this.dataset.r, c=+this.dataset.c;
+  if(mOver||mWon||mRev[r][c]) return;
+  mFlag[r][c]=!mFlag[r][c];
+  document.getElementById('mine-count').textContent=mM-mFlag.flat().filter(Boolean).length;
+  mRefresh();
+}
+
+function mReveal(r,c){
+  if(r<0||r>=mR||c<0||c>=mC||mRev[r][c]||mFlag[r][c]) return;
+  mRev[r][c]=true;
+  if(mBoard[r][c]===-1){
+    mOver=true; clearInterval(mTimer);
+    document.getElementById('reset-btn').textContent='😵';
+    document.getElementById('mine-msg').textContent='💥 게임 오버!';
+    return;
+  }
+  if(mBoard[r][c]===0) for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) mReveal(r+dr,c+dc);
+}
+
+function mCheckWin(){
+  let u=0;
+  for(let r=0;r<mR;r++) for(let c=0;c<mC;c++) if(!mRev[r][c]) u++;
+  if(u===mM){ mWon=true; clearInterval(mTimer); document.getElementById('reset-btn').textContent='😎'; document.getElementById('mine-msg').textContent='🎉 클리어!'; }
+}
+
+function mRefresh(){
+  for(let r=0;r<mR;r++) for(let c=0;c<mC;c++){
+    const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    el.className='cell'; el.textContent='';
+    if(mRev[r][c]){
+      if(mBoard[r][c]===-1){ el.classList.add('mine-exploded'); el.textContent='💣'; }
+      else{ el.classList.add('revealed'); if(mBoard[r][c]>0){ el.textContent=mBoard[r][c]; el.classList.add('n'+mBoard[r][c]); } }
+    } else if(mFlag[r][c]){ el.classList.add('flagged'); el.textContent='🚩'; }
+    else{
+      el.classList.add('hidden');
+      if((mOver||mWon)&&mBoard[r][c]===-1){ el.classList.remove('hidden'); el.classList.add('mine-revealed'); el.textContent='💣'; }
+    }
+  }
+}
+
+mineInit();
+
+/* ========== 2048 ========== */
+let g=[], score2=0, best2=+localStorage.getItem('best2048')||0;
+const TILE_SIZE=90, GAP=10, PAD=12;
+
+function cellPos(row,col){ return PAD + row*(TILE_SIZE+GAP); }
+
+function init2048(){
+  g=Array.from({length:4},()=>Array(4).fill(0));
+  score2=0; updateScoreUI();
+  document.getElementById('overlay-2048').classList.remove('show');
+  document.getElementById('msg-2048').textContent='';
+  addRandom(); addRandom(); drawTiles();
+}
+
+function addRandom(){
+  const empty=[];
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(g[r][c]===0) empty.push([r,c]);
+  if(!empty.length) return;
+  const [r,c]=empty[Math.floor(Math.random()*empty.length)];
+  g[r][c]=Math.random()<0.9?2:4;
+}
+
+function tileClass(v){
+  if(v>=2048) return v===2048?'t2048':'t-hi';
+  return 't'+v;
+}
+
+function drawTiles(){
+  const grid=document.getElementById('grid-2048');
+  grid.querySelectorAll('.tile').forEach(t=>t.remove());
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+    if(!g[r][c]) continue;
+    const t=document.createElement('div');
+    t.className=`tile ${tileClass(g[r][c])}`;
+    t.textContent=g[r][c];
+    t.style.top=cellPos(r)+'px'; t.style.left=cellPos(c)+'px';
+    grid.appendChild(t);
+  }
+}
+
+function updateScoreUI(){
+  document.getElementById('score').textContent=score2;
+  if(score2>best2){ best2=score2; localStorage.setItem('best2048',best2); }
+  document.getElementById('best').textContent=best2;
+}
+
+function slide(row){
+  let arr=row.filter(v=>v), merged=false, pts=0;
+  for(let i=0;i<arr.length-1;i++){
+    if(!merged&&arr[i]===arr[i+1]){ arr[i]*=2; pts+=arr[i]; arr.splice(i+1,1); merged=true; } else merged=false;
+  }
+  while(arr.length<4) arr.push(0);
+  return {arr, pts};
+}
+
+function move(dir){
+  let changed=false, pts=0;
+  const ng=g.map(r=>[...r]);
+  if(dir==='left'){
+    for(let r=0;r<4;r++){ const {arr,pts:p}=slide(ng[r]); if(arr.join()!==ng[r].join()) changed=true; ng[r]=arr; pts+=p; }
+  } else if(dir==='right'){
+    for(let r=0;r<4;r++){ const rev=ng[r].slice().reverse(); const {arr,pts:p}=slide(rev); const out=arr.reverse(); if(out.join()!==ng[r].join()) changed=true; ng[r]=out; pts+=p; }
+  } else if(dir==='up'){
+    for(let c=0;c<4;c++){ const col=ng.map(r=>r[c]); const {arr,pts:p}=slide(col); arr.forEach((v,r)=>{ if(v!==ng[r][c]) changed=true; ng[r][c]=v; }); pts+=p; }
+  } else if(dir==='down'){
+    for(let c=0;c<4;c++){ const col=ng.map(r=>r[c]).reverse(); const {arr,pts:p}=slide(col); arr.reverse().forEach((v,r)=>{ if(v!==ng[r][c]) changed=true; ng[r][c]=v; }); pts+=p; }
+  }
+  if(!changed) return;
+  g=ng; score2+=pts; updateScoreUI(); addRandom(); drawTiles(); checkEnd();
+}
+
+function checkEnd(){
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(g[r][c]===2048){ showOverlay('🎉 2048 달성!'); return; }
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+    if(g[r][c]===0) return;
+    if(c<3&&g[r][c]===g[r][c+1]) return;
+    if(r<3&&g[r][c]===g[r+1][c]) return;
+  }
+  showOverlay('😢 게임 오버');
+}
+
+function showOverlay(msg){
+  document.getElementById('overlay-msg').textContent=msg;
+  document.getElementById('overlay-2048').classList.add('show');
+}
+
+document.addEventListener('keydown', e=>{
+  if(!document.getElementById('g2048-screen').classList.contains('active')) return;
+  const map={'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down','a':'left','d':'right','w':'up','s':'down','A':'left','D':'right','W':'up','S':'down'};
+  if(map[e.key]){ e.preventDefault(); move(map[e.key]); }
+});
+
+let touchStart=null;
+document.addEventListener('touchstart',e=>{
+  if(!document.getElementById('g2048-screen').classList.contains('active')) return;
+  touchStart={x:e.touches[0].clientX, y:e.touches[0].clientY};
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(!touchStart||!document.getElementById('g2048-screen').classList.contains('active')) return;
+  const dx=e.changedTouches[0].clientX-touchStart.x;
+  const dy=e.changedTouches[0].clientY-touchStart.y;
+  touchStart=null;
+  if(Math.abs(dx)<20&&Math.abs(dy)<20) return;
+  if(Math.abs(dx)>Math.abs(dy)) move(dx>0?'right':'left');
+  else move(dy>0?'down':'up');
+},{passive:true});
+</script>
+</body>
+</html>

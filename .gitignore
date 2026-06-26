@@ -1,0 +1,18 @@
+# 환경변수 — 절대 커밋 금지
+.env
+.env.local
+.env.*.local
+
+# 의존성
+node_modules/
+
+# 운영체제
+.DS_Store
+Thumbs.db
+
+# 에디터
+.vscode/
+.idea/
+
+# Vercel
+.vercel/

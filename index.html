@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미니 게임 허브</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== 허브 ===== -->
+<div id="hub" class="screen active">
+  <h1>🎮 게임 허브</h1>
+  <p>즐기고 싶은 게임을 선택하세요</p>
+  <div class="card-grid">
+    <div class="card" onclick="showScreen('mine-screen')">
+      <div class="icon">💣</div>
+      <h2>지뢰찾기</h2>
+      <p>숨겨진 지뢰를 피해<br>모든 칸을 열어보세요</p>
+      <button>플레이</button>
+    </div>
+    <div class="card" onclick="showScreen('g2048-screen'); init2048()">
+      <div class="icon">🔢</div>
+      <h2>2048</h2>
+      <p>타일을 합쳐 2048을<br>만들어보세요</p>
+      <button>플레이</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 지뢰찾기 ===== -->
+<div id="mine-screen" class="screen">
+  <button class="back-btn" onclick="showScreen('hub')">← 허브</button>
+  <h1>💣 지뢰찾기</h1>
+  <div class="controls">
+    <button onclick="mineSetDiff(9,9,10)" id="mine-easy">쉬움 (9×9)</button>
+    <button onclick="mineSetDiff(16,16,40)" id="mine-med" class="active">보통 (16×16)</button>
+    <button onclick="mineSetDiff(16,30,99)" id="mine-hard">어려움 (16×30)</button>
+  </div>
+  <div class="info-bar">
+    <div><div class="lbl">💣 지뢰</div><div class="val" id="mine-count">40</div></div>
+    <button id="reset-btn" onclick="mineInit()" title="새 게임">🙂</button>
+    <div><div class="lbl">⏱ 시간</div><div class="val"><span id="mine-timer">0</span>s</div></div>
+  </div>
+  <div id="board"></div>
+  <div id="mine-msg"></div>
+  <div class="hint">좌클릭: 열기 &nbsp;|&nbsp; 우클릭: 깃발</div>
+</div>
+
+<!-- ===== 2048 ===== -->
+<div id="g2048-screen" class="screen">
+  <button class="back-btn" onclick="showScreen('hub')">← 허브</button>
+  <h1>🔢 2048</h1>
+  <div class="g2048-header">
+    <div class="score-box"><div class="lbl">점수</div><div class="val" id="score">0</div></div>
+    <div class="score-box"><div class="lbl">최고</div><div class="val" id="best">0</div></div>
+    <button id="new-game-btn" onclick="init2048()">새 게임</button>
+  </div>
+  <div id="grid-2048">
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
+    <div class="overlay-2048" id="overlay-2048">
+      <div id="overlay-msg"></div>
+      <button onclick="init2048()">다시 하기</button>
+    </div>
+  </div>
+  <div id="msg-2048"></div>
+  <div class="hint2">방향키 / WASD / 스와이프</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
