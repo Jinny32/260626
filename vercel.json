@@ -6,6 +6,10 @@
       "dest": "/api/chat.js"
     },
     {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }

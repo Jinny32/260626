@@ -109,7 +109,7 @@ async function handleChat(req, res) {
 
 /* ── 정적 파일 서빙 ── */
 function serveStatic(req, res) {
-  let filePath = path.join(__dirname, req.url === '/' ? 'landing.html' : req.url);
+  let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
   const ext = path.extname(filePath);
 
   if (!ext) filePath += '.html';

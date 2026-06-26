@@ -3,73 +3,425 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>미니 게임 허브</title>
-<link rel="stylesheet" href="style.css">
+<title>Finance Partner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f3ff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== 배경 장식 ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(167,139,250,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -150px; left: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* ===== 헤더 ===== */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 80px;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid rgba(167,139,250,0.15);
+  }
+  .logo {
+    font-size: 1.15rem; font-weight: 700; color: #7c3aed;
+    display: flex; align-items: center; gap: 8px; letter-spacing: -0.3px;
+  }
+  .logo span {
+    background: #7c3aed; color: #fff;
+    padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px;
+  }
+  nav { display: flex; gap: 34px; }
+  nav a {
+    color: #555; text-decoration: none; font-size: 0.9rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: #7c3aed; }
+  .header-btn {
+    background: #7c3aed; color: #fff; border: none;
+    padding: 10px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .header-btn:hover { background: #6d28d9; }
+
+  /* ===== 히어로 섹션 ===== */
+  .hero {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 80px 80px 60px;
+    max-width: 1200px; margin: 0 auto;
+    gap: 40px;
+  }
+
+  /* 왼쪽 텍스트 */
+  .hero-left { flex: 1; min-width: 0; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(124,58,237,0.1); color: #7c3aed;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px;
+    margin-bottom: 24px;
+  }
+  .badge::before { content: '◆'; font-size: 0.6rem; }
+  h1 {
+    font-size: 3.2rem; font-weight: 900; line-height: 1.2;
+    color: #1e1b4b; letter-spacing: -1.5px; margin-bottom: 20px;
+  }
+  h1 em { color: #7c3aed; font-style: normal; }
+  .hero-desc {
+    font-size: 0.95rem; color: #6b7280; line-height: 1.8;
+    margin-bottom: 36px; max-width: 420px;
+  }
+  .hero-desc strong { color: #7c3aed; font-weight: 600; }
+
+  /* 버튼 그룹 */
+  .btn-group { display: flex; gap: 14px; align-items: center; margin-bottom: 52px; }
+  .btn-primary {
+    background: #7c3aed; color: #fff; border: none;
+    padding: 15px 28px; border-radius: 12px; font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { background: #6d28d9; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124,58,237,0.45); }
+  .btn-secondary {
+    background: transparent; color: #7c3aed;
+    border: 1.5px solid #c4b5fd; padding: 14px 24px;
+    border-radius: 12px; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(124,58,237,0.07); border-color: #7c3aed; }
+
+  /* 통계 */
+  .stats { display: flex; gap: 36px; }
+  .stat-item { display: flex; flex-direction: column; gap: 4px; }
+  .stat-num { font-size: 1.6rem; font-weight: 900; color: #1e1b4b; letter-spacing: -0.5px; }
+  .stat-num span { color: #7c3aed; }
+  .stat-label { font-size: 0.8rem; color: #9ca3af; font-weight: 500; }
+  .stat-divider { width: 1px; background: #e5e7eb; align-self: stretch; }
+
+  /* 오른쪽 일러스트 */
+  .hero-right {
+    flex: 1; min-width: 0;
+    display: flex; justify-content: center; align-items: center;
+    position: relative;
+  }
+
+  /* 메인 카드 (노트북 영역) */
+  .illust-wrap {
+    position: relative; width: 480px; height: 420px;
+  }
+
+  /* 뒤 배경 원 */
+  .illust-circle {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 360px; height: 360px;
+    background: radial-gradient(circle at 40% 40%, #ede9fe, #ddd6fe);
+    border-radius: 50%;
+  }
+
+  /* 노트북 */
+  .laptop {
+    position: absolute; bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+  }
+  .laptop-screen {
+    background: #1e1b4b; border-radius: 12px 12px 0 0;
+    padding: 12px; height: 170px;
+    box-shadow: 0 -4px 20px rgba(124,58,237,0.2);
+    overflow: hidden;
+  }
+  .screen-content {
+    background: #fff; border-radius: 8px; height: 100%; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .screen-bar { display: flex; gap: 5px; margin-bottom: 4px; }
+  .screen-bar span { width: 7px; height: 7px; border-radius: 50%; }
+  .screen-bar span:nth-child(1) { background: #ff6b6b; }
+  .screen-bar span:nth-child(2) { background: #ffd43b; }
+  .screen-bar span:nth-child(3) { background: #69db7c; }
+  .screen-row { display: flex; gap: 8px; align-items: center; }
+  .screen-label { font-size: 0.6rem; color: #9ca3af; width: 50px; }
+  .screen-progress { flex: 1; height: 6px; background: #f3f4f6; border-radius: 3px; overflow: hidden; }
+  .screen-progress-fill { height: 100%; border-radius: 3px; }
+  .chart-mini {
+    display: flex; align-items: flex-end; gap: 4px; height: 50px; margin-top: 4px;
+  }
+  .chart-bar {
+    flex: 1; border-radius: 3px 3px 0 0;
+    background: linear-gradient(to top, #7c3aed, #a78bfa);
+    opacity: 0.7;
+  }
+
+  .laptop-base {
+    background: #c4b5fd; height: 12px; border-radius: 0 0 4px 4px;
+    position: relative;
+  }
+  .laptop-base::after {
+    content: '';
+    position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 8px; background: #a78bfa; border-radius: 0 0 6px 6px;
+  }
+
+  /* 캐릭터 */
+  .character {
+    position: absolute; top: 20px; right: 40px;
+    font-size: 4rem; filter: drop-shadow(0 8px 16px rgba(124,58,237,0.25));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* 떠다니는 카드들 */
+  .float-card {
+    position: absolute;
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(124,58,237,0.12);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .card-chart {
+    top: 20px; left: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .card-chart .label { font-size: 0.68rem; color: #9ca3af; }
+  .card-chart .value { font-size: 1.1rem; font-weight: 900; color: #1e1b4b; }
+  .card-chart .change { font-size: 0.7rem; color: #10b981; }
+  .mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 28px; margin-top: 4px; }
+  .mini-bar { width: 8px; border-radius: 2px 2px 0 0; background: #a78bfa; }
+
+  .card-won {
+    top: 10px; right: 10px;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: #fff; border-radius: 50%;
+    width: 56px; height: 56px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 900;
+    box-shadow: 0 6px 20px rgba(124,58,237,0.4);
+    animation: float 3s ease-in-out infinite 0.5s;
+  }
+
+  .card-calc {
+    bottom: 80px; left: 0;
+    font-size: 1.8rem;
+    padding: 14px;
+    animation: float 3s ease-in-out infinite 1s;
+  }
+
+  .card-coins {
+    bottom: 60px; right: 10px;
+    font-size: 1.5rem;
+    padding: 12px 14px;
+    animation: float 3s ease-in-out infinite 1.5s;
+  }
+
+  .card-plant {
+    bottom: 10px; right: 60px;
+    font-size: 1.8rem;
+    padding: 10px 12px;
+    animation: float 3s ease-in-out infinite 0.8s;
+  }
+
+  /* ===== 피처 카드 섹션 ===== */
+  .features {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 80px 80px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  }
+  .feature-card {
+    background: #fff; border-radius: 20px; padding: 32px 28px;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(124,58,237,0.14); }
+  .feature-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 18px;
+  }
+  .feature-card h3 { font-size: 1rem; font-weight: 700; color: #1e1b4b; margin-bottom: 10px; }
+  .feature-card p { font-size: 0.85rem; color: #9ca3af; line-height: 1.7; }
+
+  /* ===== 반응형 ===== */
+  @media (max-width: 900px) {
+    header { padding: 18px 24px; }
+    nav { display: none; }
+    .hero { flex-direction: column; padding: 40px 24px 30px; }
+    h1 { font-size: 2.2rem; }
+    .illust-wrap { width: 320px; height: 300px; }
+    .laptop { width: 220px; }
+    .laptop-screen { height: 120px; }
+    .features { grid-template-columns: 1fr; padding: 0 24px 60px; }
+    .stats { gap: 20px; }
+  }
+</style>
 </head>
 <body>
 
-<!-- ===== 허브 ===== -->
-<div id="hub" class="screen active">
-  <h1>🎮 게임 허브</h1>
-  <p>즐기고 싶은 게임을 선택하세요</p>
-  <div class="card-grid">
-    <div class="card" onclick="showScreen('mine-screen')">
-      <div class="icon">💣</div>
-      <h2>지뢰찾기</h2>
-      <p>숨겨진 지뢰를 피해<br>모든 칸을 열어보세요</p>
-      <button>플레이</button>
-    </div>
-    <div class="card" onclick="showScreen('g2048-screen'); init2048()">
-      <div class="icon">🔢</div>
-      <h2>2048</h2>
-      <p>타일을 합쳐 2048을<br>만들어보세요</p>
-      <button>플레이</button>
-    </div>
+<!-- 헤더 -->
+<header>
+  <div class="logo">
+    <span>FP</span> Finance Partner
   </div>
-</div>
+  <nav>
+    <a href="#">서비스 소개</a>
+    <a href="#">이용 방법</a>
+    <a href="#">요금제</a>
+    <a href="#">고객 사례</a>
+  </nav>
+  <button class="header-btn">무료 상담 신청</button>
+</header>
 
-<!-- ===== 지뢰찾기 ===== -->
-<div id="mine-screen" class="screen">
-  <button class="back-btn" onclick="showScreen('hub')">← 허브</button>
-  <h1>💣 지뢰찾기</h1>
-  <div class="controls">
-    <button onclick="mineSetDiff(9,9,10)" id="mine-easy">쉬움 (9×9)</button>
-    <button onclick="mineSetDiff(16,16,40)" id="mine-med" class="active">보통 (16×16)</button>
-    <button onclick="mineSetDiff(16,30,99)" id="mine-hard">어려움 (16×30)</button>
-  </div>
-  <div class="info-bar">
-    <div><div class="lbl">💣 지뢰</div><div class="val" id="mine-count">40</div></div>
-    <button id="reset-btn" onclick="mineInit()" title="새 게임">🙂</button>
-    <div><div class="lbl">⏱ 시간</div><div class="val"><span id="mine-timer">0</span>s</div></div>
-  </div>
-  <div id="board"></div>
-  <div id="mine-msg"></div>
-  <div class="hint">좌클릭: 열기 &nbsp;|&nbsp; 우클릭: 깃발</div>
-</div>
-
-<!-- ===== 2048 ===== -->
-<div id="g2048-screen" class="screen">
-  <button class="back-btn" onclick="showScreen('hub')">← 허브</button>
-  <h1>🔢 2048</h1>
-  <div class="g2048-header">
-    <div class="score-box"><div class="lbl">점수</div><div class="val" id="score">0</div></div>
-    <div class="score-box"><div class="lbl">최고</div><div class="val" id="best">0</div></div>
-    <button id="new-game-btn" onclick="init2048()">새 게임</button>
-  </div>
-  <div id="grid-2048">
-    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
-    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
-    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
-    <div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div><div class="tile-bg"></div>
-    <div class="overlay-2048" id="overlay-2048">
-      <div id="overlay-msg"></div>
-      <button onclick="init2048()">다시 하기</button>
+<!-- 히어로 -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="badge">FINANCE PARTNER</div>
+    <h1>복잡한 재무를,<br><em>당신의 언어로.</em></h1>
+    <p class="hero-desc">
+      재무는 모르는 한국이 없습니다. 저희이 구조를 바꿔 해겁니다.<br>
+      <strong>중소기업 소상공인 성장 재무 파트너 지식파트너 지식파트너</strong>가<br>
+      설목부터 실천까지 쉽게 안내해 드립니다.
+    </p>
+    <div class="btn-group">
+      <button class="btn-primary">무료 초기 상담 신청 →</button>
+      <button class="btn-secondary">서비스 둘러보기</button>
+    </div>
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-num">1,200<span>+</span></div>
+        <div class="stat-label">누적 상담</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-num">98<span>%</span></div>
+        <div class="stat-label">상담 만족도</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-num">6<span>개월</span></div>
+        <div class="stat-label">평균 처리기간</div>
+      </div>
     </div>
   </div>
-  <div id="msg-2048"></div>
-  <div class="hint2">방향키 / WASD / 스와이프</div>
-</div>
 
-<script src="script.js"></script>
+  <div class="hero-right">
+    <div class="illust-wrap">
+      <div class="illust-circle"></div>
+
+      <!-- 캐릭터 -->
+      <div class="character">🧑‍💼</div>
+
+      <!-- ₩ 원 마크 -->
+      <div class="float-card card-won">₩</div>
+
+      <!-- 차트 카드 -->
+      <div class="float-card card-chart">
+        <div class="label">월간 재무 현황</div>
+        <div class="value">+24.8%</div>
+        <div class="change">▲ 전월 대비 상승</div>
+        <div class="mini-chart">
+          <div class="mini-bar" style="height:40%"></div>
+          <div class="mini-bar" style="height:60%"></div>
+          <div class="mini-bar" style="height:45%"></div>
+          <div class="mini-bar" style="height:80%"></div>
+          <div class="mini-bar" style="height:65%"></div>
+          <div class="mini-bar" style="height:100%;background:linear-gradient(to top,#7c3aed,#a78bfa);opacity:1"></div>
+        </div>
+      </div>
+
+      <!-- 계산기 -->
+      <div class="float-card card-calc">🖩</div>
+
+      <!-- 동전 -->
+      <div class="float-card card-coins">🪙</div>
+
+      <!-- 식물 -->
+      <div class="float-card card-plant">🌿</div>
+
+      <!-- 노트북 -->
+      <div class="laptop">
+        <div class="laptop-screen">
+          <div class="screen-content">
+            <div class="screen-bar">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="screen-row">
+              <div class="screen-label">매출</div>
+              <div class="screen-progress"><div class="screen-progress-fill" style="width:82%;background:#7c3aed"></div></div>
+            </div>
+            <div class="screen-row">
+              <div class="screen-label">비용</div>
+              <div class="screen-progress"><div class="screen-progress-fill" style="width:45%;background:#a78bfa"></div></div>
+            </div>
+            <div class="screen-row">
+              <div class="screen-label">이익</div>
+              <div class="screen-progress"><div class="screen-progress-fill" style="width:63%;background:#c4b5fd"></div></div>
+            </div>
+            <div class="chart-mini">
+              <div class="chart-bar" style="height:50%"></div>
+              <div class="chart-bar" style="height:70%"></div>
+              <div class="chart-bar" style="height:40%"></div>
+              <div class="chart-bar" style="height:90%"></div>
+              <div class="chart-bar" style="height:60%"></div>
+              <div class="chart-bar" style="height:100%;opacity:1"></div>
+              <div class="chart-bar" style="height:75%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="laptop-base"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 피처 카드 -->
+<section class="features">
+  <div class="feature-card">
+    <div class="feature-icon">📊</div>
+    <h3>재무 분석 리포트</h3>
+    <p>복잡한 재무 데이터를 한눈에 파악할 수 있도록 쉬운 언어로 분석해 드립니다.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🤝</div>
+    <h3>1:1 전담 컨설팅</h3>
+    <p>전문 재무 파트너가 직접 담당하여 맞춤형 솔루션을 제공합니다.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔒</div>
+    <h3>안전한 데이터 관리</h3>
+    <p>금융 수준의 보안으로 소중한 재무 정보를 안전하게 보호합니다.</p>
+  </div>
+</section>
+
+<script src="chatbot.js"></script>
 </body>
 </html>
